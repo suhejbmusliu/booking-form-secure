@@ -5,16 +5,12 @@
 2) In this folder:
    ```bash
    npm install
-   cp .env.example .env   # Windows PowerShell: copy .env.example .env
-   ```
-3) Edit `.env` with your real values.
-4) Start:
+   cp .env.example .env
+   ``` 
+3) Crete yout own TOKEN and CHAT_ID
+
+4) Edit `.env` with your real values.
+5) Start:
    ```bash
    npm start
    ```
-5) Open http://localhost:3000
-
-## Deploy
-- Upload this project to your host (Render/Railway/Vercel/Heroku/VPS).
-- Set env vars BOT_TOKEN and CHAT_ID in the dashboard.
-- Never expose your token in client code.
