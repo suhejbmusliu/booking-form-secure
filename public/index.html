@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Make Your Reservation</title>
+  <link rel="stylesheet" href="style.css">
+   
+</head>
+<body>
+  <div class="card">
+    <div class="media">
+      <img alt="Pool" src="image.jpg"/>
+    </div>
+    <div class="form">
+      <h1>Make Your Reservation</h1>
+      <div class="error" id="errorBox"></div>
+      <div class="success" id="successBox"></div>
+
+      <form id="bookingForm">
+        <div class="grid">
+          <div>
+            <label for="checkin">Check in</label>
+            <input type="date" id="checkin" name="checkin" required/>
+          </div>
+          <div>
+            <label for="checkout">Check out</label>
+            <input type="date" id="checkout" name="checkout" required/>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:6px;">
+          <div>
+            <label for="adults">Adults</label>
+            <select id="adults" name="adults" required>
+              <option value="1">1</option><option value="2">2</option>
+              <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+            </select>
+          </div>
+          <div>
+            <label for="children">Children</label>
+            <select id="children" name="children">
+              <option value="0">0</option><option value="1">1</option>
+              <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-1" style="margin-top:6px;">
+          <div>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email" required/>
+          </div>
+          <div>
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required/>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="submit">Book Now</button>
+          <p class="note">This sends to the secure Node backend.</p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const SECURE_PROXY_URL = "/telegram-proxy";
+    const todayStr = new Date().toISOString().split("T")[0];
+    const checkin  = document.getElementById("checkin");
+    const checkout = document.getElementById("checkout");
+    checkin.min = todayStr; checkout.min = todayStr;
+    checkin.addEventListener("change", () => {
+      checkout.min = checkin.value || todayStr;
+      if (checkout.value && checkout.value < checkout.min) checkout.value = checkout.min;
+    });
+
+    const form = document.getElementById("bookingForm");
+    const errorBox = document.getElementById("errorBox");
+    const successBox = document.getElementById("successBox");
+    const show = (el,msg)=>{ el.textContent = msg; el.style.display='block'; };
+    const hide = (el)=>{ el.textContent = ''; el.style.display='none'; };
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault(); hide(errorBox); hide(successBox);
+      const data = Object.fromEntries(new FormData(form).entries());
+      if (!data.checkin || !data.checkout || !data.adults || !data.email || !data.phone){
+        show(errorBox, "Please fill all required fields."); return;
+      }
+      if (new Date(data.checkout) <= new Date(data.checkin)){
+        show(errorBox, "Check-out must be after check-in."); return;
+      }
+      try{
+        const r = await fetch(SECURE_PROXY_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        const payload = await r.json();
+        if (!r.ok || !payload.ok) throw new Error(payload.error || "Server error");
+        form.reset(); checkin.min = todayStr; checkout.min = todayStr;
+        show(successBox, "Success! Sent to Telegram and confirmation posted.");
+      }catch(err){
+        console.error(err); show(errorBox, err.message || "Something went wrong.");
+      }
+    });
+  </script>
+</body>
+</html>
